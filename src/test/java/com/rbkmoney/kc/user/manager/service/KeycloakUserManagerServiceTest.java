@@ -41,6 +41,7 @@ import static com.rbkmoney.kc.user.manager.util.Constants.REDIRECT_URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -83,14 +84,18 @@ class KeycloakUserManagerServiceTest {
         headers.put("Location", Collections.singletonList(CREATED_USER_RESOURCE));
         when(usersResource.create(any(UserRepresentation.class)))
                 .thenReturn(new ServerResponse(null, 201, headers))
-                .thenReturn(new ServerResponse(null, 409, null));
+                .thenReturn(new ServerResponse(null, 409, null))
+                .thenReturn(new ServerResponse(null, 422, null));
 
         User user = createUser();
         CreateUserResponse createUserResponse = service.create(user);
         assertEquals(CREATED_USER_RESOURCE, createUserResponse.getStatus().getSuccess().getId());
+        createUserResponse = service.create(user);
+        assertTrue(createUserResponse.getStatus().isSetUserAlreadyCreated());
+        assertNull(createUserResponse.getStatus().getUserAlreadyCreated().getDescription());
         assertThrows(KeycloakUserManagerException.class, () -> service.create(user));
-        verify(keycloakAdminClientManager, times(2)).getKcClient(any());
-        verify(usersResource, times(2)).create(any());
+        verify(keycloakAdminClientManager, times(3)).getKcClient(any());
+        verify(usersResource, times(3)).create(any());
     }
 
     @Test

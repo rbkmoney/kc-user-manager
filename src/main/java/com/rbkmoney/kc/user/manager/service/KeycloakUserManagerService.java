@@ -10,6 +10,7 @@ import com.rbkmoney.kc_user_manager.KeycloakUserManagerSrv;
 import com.rbkmoney.kc_user_manager.Status;
 import com.rbkmoney.kc_user_manager.SuccessfulUserCreation;
 import com.rbkmoney.kc_user_manager.User;
+import com.rbkmoney.kc_user_manager.UserAlreadyCreated;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
@@ -38,19 +39,9 @@ public class KeycloakUserManagerService implements KeycloakUserManagerSrv.Iface 
                 .realm(user.getUserId().getRealm())
                 .users()
                 .create(UserRepresentationMapper.map(user));
+        Status status = mapKeycloakResponseToStatus(response, user.getUserId().getEmail());
 
-        if (response.getStatus() != 201) {
-            throw new KeycloakUserManagerException().setReason(
-                    String.format("Error: HTTP code - %s, reason - %s",
-                            response.getStatus(), response.getStatusInfo().getReasonPhrase())
-            );
-        }
-
-        String keycloakUserId = response.getLocation().toString();
-        SuccessfulUserCreation userCreation = new SuccessfulUserCreation(keycloakUserId);
-
-        log.info("Created user {} in keycloak with id {}", user.getUserId(), keycloakUserId);
-        return new CreateUserResponse(Status.success(userCreation));
+        return new CreateUserResponse(status);
     }
 
     @Override
@@ -89,7 +80,8 @@ public class KeycloakUserManagerService implements KeycloakUserManagerSrv.Iface 
 
     /**
      * Finds user in keycloak by username.
-     * @param email user's email
+     *
+     * @param email         user's email
      * @param realmResource realm resource
      * @return brief representation of user
      * @throws KeycloakUserManagerException if user not found
@@ -117,6 +109,39 @@ public class KeycloakUserManagerService implements KeycloakUserManagerSrv.Iface 
                 .findAny()
                 .orElseThrow(() -> new KeycloakUserManagerException()
                         .setReason(String.format("user with email %s not found", email)));
+    }
+
+    /**
+     * Maps response from keycloak to CreateUserResponse.Status.
+     * @param keycloakResponse response from Keycloak server
+     * @param email user email from request
+     * @return status of CreateUserResponse
+     * @throws KeycloakUserManagerException unknown error from Keycloak
+     */
+    private Status mapKeycloakResponseToStatus(Response keycloakResponse, String email)
+            throws KeycloakUserManagerException {
+        Status status = new Status();
+        switch (keycloakResponse.getStatus()) {
+            case 201: {
+                String keycloakUserId = keycloakResponse.getLocation().toString();
+                status.setSuccess(new SuccessfulUserCreation(keycloakUserId));
+                log.info("Created user {} in keycloak {}", email, keycloakUserId);
+                break;
+            }
+            case 409: {
+                status.setUserAlreadyCreated(new UserAlreadyCreated());
+                log.warn("User {} already exists", email);
+                break;
+            }
+            default: {
+                throw new KeycloakUserManagerException().setReason(String.format(
+                        "Error: HTTP code - %s, reason - %s",
+                        keycloakResponse.getStatus(),
+                        keycloakResponse.getStatusInfo().getReasonPhrase()));
+            }
+        }
+
+        return status;
     }
 
 }
