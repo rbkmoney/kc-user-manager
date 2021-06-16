@@ -80,8 +80,7 @@ public class KeycloakUserManagerService implements KeycloakUserManagerSrv.Iface 
 
     /**
      * Finds user in keycloak by username.
-     *
-     * @param email         user's email
+     * @param email user's email
      * @param realmResource realm resource
      * @return brief representation of user
      * @throws KeycloakUserManagerException if user not found
