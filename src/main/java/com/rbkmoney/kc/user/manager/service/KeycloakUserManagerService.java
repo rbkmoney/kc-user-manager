@@ -122,9 +122,9 @@ public class KeycloakUserManagerService implements KeycloakUserManagerSrv.Iface 
         Status status = new Status();
         switch (keycloakResponse.getStatus()) {
             case 201: {
-                String keycloakUserId = keycloakResponse.getLocation().toString();
-                status.setSuccess(new SuccessfulUserCreation(keycloakUserId));
-                log.info("Created user {} in keycloak {}", email, keycloakUserId);
+                String keycloakUserResource = keycloakResponse.getLocation().toString();
+                status.setSuccess(new SuccessfulUserCreation(keycloakUserResource));
+                log.info("User {} created in keycloak. Resource - {}", email, keycloakUserResource);
                 break;
             }
             case 409: {
