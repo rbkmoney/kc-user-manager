@@ -96,6 +96,7 @@ public class KeycloakUserManagerService implements KeycloakUserManagerSrv.Iface 
                         email,
                         null,
                         null,
+                        null,
                         true
                 );
 
