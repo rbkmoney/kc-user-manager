@@ -115,7 +115,7 @@ class KeycloakUserManagerServiceTest {
                 createUserRepresentation("stub_2")
         );
 
-        when(usersResource.search(null, null, null, EMAIL, null, null, true))
+        when(usersResource.search(null, null, null, EMAIL, null, null, null, true))
                 .thenReturn(new ArrayList<>())
                 .thenReturn(noRequiredUserList)
                 .thenReturn(withRequiredUserList);
@@ -132,7 +132,7 @@ class KeycloakUserManagerServiceTest {
         service.sendUpdatePasswordEmail(request);
 
         verify(usersResource, times(4))
-                .search(null, null, null, EMAIL, null, null, true);
+                .search(null, null, null, EMAIL, null, null, null, true);
         verify(usersResource, times(2)).get(user.getId());
 
         ArgumentCaptor<String> clientIdCaptor = ArgumentCaptor.forClass(String.class);
@@ -174,7 +174,7 @@ class KeycloakUserManagerServiceTest {
                 createUserRepresentation("stub_2")
         );
 
-        when(usersResource.search(null, null, null, EMAIL, null, null, true))
+        when(usersResource.search(null, null, null, EMAIL, null, null, null, true))
                 .thenReturn(new ArrayList<>())
                 .thenReturn(noRequiredUserList)
                 .thenReturn(withRequiredUserList);
@@ -191,7 +191,7 @@ class KeycloakUserManagerServiceTest {
         service.sendVerifyUserEmail(request);
 
         verify(usersResource, times(4))
-                .search(null, null, null, EMAIL, null, null, true);
+                .search(null, null, null, EMAIL, null, null, null, true);
         verify(usersResource, times(2)).get(user.getId());
 
         ArgumentCaptor<String> clientIdCaptor = ArgumentCaptor.forClass(String.class);
